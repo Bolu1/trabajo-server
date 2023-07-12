@@ -2,7 +2,7 @@ mod core;
 use crate::core::{
     helpers::response, 
     config::config::Config,
-    security::jwt_auth
+    middleware::jwt_auth
 };
 mod model;
 mod route;

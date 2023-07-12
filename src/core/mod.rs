@@ -1,3 +1,3 @@
 pub mod config;
 pub mod helpers;
-pub mod security;
+pub mod middleware;
