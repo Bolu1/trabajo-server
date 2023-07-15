@@ -28,7 +28,7 @@ fn filter_user_record(user: &User) -> FilteredUser{
         email: user.email.to_owned(),
         first_name: user.first_name.to_owned(),
         last_name: user.last_name.to_owned(),
-        photo: user.photo.to_owned(),
+        resume: user.resume.to_owned(),
         role: user.role.to_owned(),
         is_verified: user.is_verified,
         createdAt: user.created_at.unwrap(),
@@ -250,6 +250,7 @@ async fn get_me_handler(
 
     HttpResponse::Ok().json(json_response)
 }
+
 
 pub async fn find_user_by_id(
     data: &web::Data<AppState>,

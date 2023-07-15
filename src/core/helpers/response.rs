@@ -9,7 +9,7 @@ pub struct FilteredUser{
     pub last_name: String,
     pub email: String,
     pub role: String,
-    pub photo: String,
+    pub resume: String,
     pub is_verified: bool,
     pub createdAt: DateTime<Utc>,
     pub updatedAt: DateTime<Utc>,

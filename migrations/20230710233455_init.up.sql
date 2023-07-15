@@ -7,7 +7,7 @@ CREATE TABLE
         first_name VARCHAR(100) NOT NULL,
         last_name VARCHAR(100) NOT NULL,
         email VARCHAR(255) NOT NULL UNIQUE,
-        photo VARCHAR NOT NULL DEFAULT 'default.png',
+        resume VARCHAR NOT NULL DEFAULT '',
         is_verified BOOLEAN NOT NULL DEFAULT TRUE,
         password VARCHAR(100) NOT NULL,
         role VARCHAR(50) NOT NULL DEFAULT 'user',

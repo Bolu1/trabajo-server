@@ -23,3 +23,9 @@ watch = "0.2.3"
 handlebars = "4.3.7"
 lettre = { version = "0.10.4", features = ["tokio1", "tokio1-native-tls"] }
 tokio = { version = "1.28.1", features = ["full"] }
+multer = "2.1.0"
+futures-util = "0.3.25"
+image = "0.24.5"
+mime = "0.3.16"
+actix-multipart = "0.5.0"
+actix-files = "0.6.2"

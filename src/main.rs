@@ -8,6 +8,8 @@ mod route;
 mod schema;
 mod service;
 
+
+use actix_files as fs;
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::{http::header, web, App, HttpServer};
@@ -61,6 +63,7 @@ async fn main() -> std::io::Result<()> {
                 db: pool.clone(),
                 env: config.clone(),
             }))
+            .service(fs::Files::new("/static", "./static").show_files_listing())
             .configure(route::config)
             .wrap(cors)
             .wrap(Logger::default())

@@ -8,19 +8,8 @@ use crate::{
 };
 
 use actix_web::{
-    cookie::{time::Duration as ActixWebDuration, Cookie},
     get, post, web, HttpMessage, HttpRequest, HttpResponse, Responder,
 };
-
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
-    Argon2,
-};
-
-use chrono::{prelude::*, Duration};
-use jsonwebtoken::{encode, EncodingKey, Header};
-use serde_json::json;
-use sqlx::Row;
 use uuid::Uuid;
 
 #[post("/job")]
@@ -36,7 +25,7 @@ async fn create_job_posting(
     // check if user is an admin
     let user_info = find_user_by_id(&data, user_id).await;
     println!("{:?}", user_info);
-    if(user_info.role != "Admin"){
+    if user_info.role != "Admin"{
         return  HttpResponse::Unauthorized().json(
             serde_json::json!({
                 "status":"Error",
@@ -113,12 +102,11 @@ async fn fetch_job_posting(
 #[get("/job/{job_id}")]
 async fn find_job_by_id(
     data: web::Data::<AppState>,
-    query: web::Query<QueryParam>,
     params: web::Path<String>
 )-> impl Responder{
 
     let job_id = params.into_inner();
-    let job_uuid: uuid::Uuid = Uuid::parse_str((&job_id)).unwrap();
+    let job_uuid: uuid::Uuid = Uuid::parse_str(&job_id).unwrap();
 
     let jobs = sqlx::query_as!(
         Job,
@@ -136,34 +124,4 @@ async fn find_job_by_id(
     });
 
     HttpResponse::Ok().json(json_responder)
-}
-
-#[get("/job/search")]
-async fn search_job_posting(
-    data: web::Data::<AppState>,
-    query: web::Query<QueryParam>,
-)-> impl Responder{
-
-    let mut search_query:&String  = &String::from("");
-    match &query.search_query{
-        None=>{},
-        Some(x)=>{
-            search_query = x
-        }
-    };
-
-    let jobs = sqlx::query_as!(
-        Job,
-        "SELECT * FROM jobs "
-    )
-    .fetch_all(&data.db)
-    .await
-    .unwrap();
-
-    let json_response = serde_json::json!({
-        "status":"Success",
-        "message": "Jobs fetched",
-        "data": jobs
-    });
-    HttpResponse::Ok().json(json_response)
 }
