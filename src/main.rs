@@ -1,12 +1,12 @@
 mod core;
 use crate::core::{
-    helpers::response, 
     config::config::Config,
     middleware::jwt_auth
 };
 mod model;
 mod route;
 mod schema;
+mod service;
 
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
@@ -61,7 +61,7 @@ async fn main() -> std::io::Result<()> {
                 db: pool.clone(),
                 env: config.clone(),
             }))
-            .configure(route::user_route::config)
+            .configure(route::config)
             .wrap(cors)
             .wrap(Logger::default())
     })

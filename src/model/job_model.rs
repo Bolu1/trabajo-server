@@ -3,15 +3,14 @@ use serde::{Deserialize, Serialize};
 
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, sqlx::FromRow, Serialize, Clone)]
-pub struct User{
+pub struct Job{
     pub id: uuid::Uuid,
-    pub first_name: String,
-    pub last_name: String,
-    pub email: String,
-    pub password: String,
-    pub role: String,
-    pub photo: String,
-    pub is_verified: bool,
+    pub title: String,
+    pub company_name: String,
+    pub city: String,
+    pub country: String,
+    pub salary: String,
+    pub description: String,
     #[serde(rename = "createdAt")]
     pub created_at: Option<DateTime<Utc>>,
     #[serde(rename = "updatedAt")]

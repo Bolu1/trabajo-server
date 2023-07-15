@@ -30,13 +30,13 @@ fn filter_user_record(user: &User) -> FilteredUser{
         last_name: user.last_name.to_owned(),
         photo: user.photo.to_owned(),
         role: user.role.to_owned(),
-        verified: user.verified,
+        is_verified: user.is_verified,
         createdAt: user.created_at.unwrap(),
         updatedAt: user.updated_at.unwrap(),
     }
 }
 
-#[post("/auth/register")]
+#[post("/auth/user/register")]
 async fn register_user_handler(
     body: web::Json<RegisterUserSchema>,
     data: web::Data<AppState>,
@@ -69,6 +69,65 @@ async fn register_user_handler(
         body.last_name.to_string(),
         body.email.to_string().to_lowercase(),
         hashed_password
+    )
+    .fetch_one(&data.db)
+    .await;
+
+    match query_result{
+        Ok(user)=>{
+            let user_response = serde_json::json!({
+                "status": "Success",
+                "data": serde_json::json!({
+                    "user": filter_user_record(&user)
+                })
+            });
+            return HttpResponse::Ok().json(user_response);
+        }
+        Err(e)=>{
+            return HttpResponse::InternalServerError()
+                .json(serde_json::json!({
+                    "status": "Error",
+                    "message": format!("{:?}", e)
+                }));
+        }
+    }
+}
+
+#[post("/auth/admin/register")]
+async fn register_admin_handler(
+    body: web::Json::<RegisterUserSchema>,
+    data: web::Data<AppState>
+)-> impl Responder{
+
+    let exists: bool = sqlx::query("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)")
+        .bind(body.email.to_owned())
+        .fetch_one(&data.db)
+        .await
+        .unwrap()
+        .get(0);
+
+    if exists{
+        return HttpResponse::Conflict().json(
+            serde_json::json!({
+                "status": "Error",
+                "message": "Email already in use"
+            })
+        );
+    }
+
+    let salt = SaltString::generate(&mut OsRng);
+    let hashed_password = Argon2::default()
+        .hash_password(body.password.as_bytes(), &salt)
+        .expect("Error while hashing password")
+        .to_string();
+    let query_result = sqlx::query_as!(
+        User,
+        "INSERT INTO users (first_name, last_name, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        body.first_name.to_string(),
+        body.last_name.to_string(),
+        body.email.to_string().to_lowercase(),
+        hashed_password,
+        "Admin"
     )
     .fetch_one(&data.db)
     .await;
@@ -163,11 +222,12 @@ async fn logout_handler(
     HttpResponse::Ok()
         .cookie(cookie)
         .json(json!({
-            "status": "Success"
+            "status": "Success",
+            "message": "Session ended"
         }))
 }
 
-#[get("/user/me")]
+#[get("/auth/me")]
 async fn get_me_handler(
     req: HttpRequest,
     data: web::Data<AppState>,
@@ -191,13 +251,14 @@ async fn get_me_handler(
     HttpResponse::Ok().json(json_response)
 }
 
-pub fn config(conf: &mut web::ServiceConfig) {
-    let scope = web::scope("/api")
-        // .service(health_checker_handler)
-        .service(register_user_handler)
-        .service(login_user_handler)
-        .service(logout_handler)
-        .service(get_me_handler);
-
-    conf.service(scope);
+pub async fn find_user_by_id(
+    data: &web::Data<AppState>,
+    user_id: &uuid::Uuid
+)-> User{
+    
+    let user = sqlx::query_as!(User, "SELECT * FROM users WHERE id = $1", user_id)
+    .fetch_one(&data.db)
+    .await
+    .unwrap();
+    user
 }
